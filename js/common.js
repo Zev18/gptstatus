@@ -1,9 +1,11 @@
 // This is the main js file for the extension.
-var last_status;
-var last_time;
+var lastStatus;
+var lastTime;
 
-var status_message;
-var time_message;
+const refreshDelay = 60000;
+
+var statusMessage;
+var timeMessage;
 
 async function updateStatus() {
   try {
@@ -22,19 +24,21 @@ async function updateStatus() {
 async function init() {
   console.log("init started");
   let results = await updateStatus();
-  last_status = results.status;
-  last_time = results.time;
+  lastStatus = results.status;
+  lastTime = results.time;
   console.log(results);
-  if (last_status == "partial_outage") {
-    status_message = "ChatGPT is partially down.";
+  if (lastStatus == "partial_outage") {
+    statusMessage = "ChatGPT is partially down.";
     browser.browserAction.setIcon({ path: "icons/yellow_icon.png" });
-  } else if (last_status == "major_outage") {
-    status_message = "ChatGPT is experiencing a major outage.";
+  } else if (lastStatus == "major_outage") {
+    statusMessage = "ChatGPT is experiencing a major outage.";
     browser.browserAction.setIcon({ path: "icons/red_icon.png" });
-  } else if (last_status == "operational") {
-    status_message = "ChatGPT is fully operational.";
+  } else if (lastStatus == "operational") {
+    statusMessage = "ChatGPT is fully operational.";
     browser.browserAction.setIcon({ path: "icons/green_icon.png" });
   }
+
+  setInterval(init, refreshDelay);
 }
 
 browser.runtime.onStartup.addListener(init);
