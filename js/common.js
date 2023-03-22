@@ -7,6 +7,8 @@ let refreshDelay = 60000;
 let statusMessage;
 let timeMessage;
 
+let mainLoop;
+
 // updates the status of chatGPT via the api
 async function updateStatus() {
   try {
@@ -26,11 +28,14 @@ async function updateStatus() {
 async function init() {
   try {
     console.log("init started");
-    refreshDelay = await browser.storage.local.get({ refreshRate: 60000 });
+    refreshDelay = await browser.storage.sync.get({ refreshRate: 60000 });
     console.log(refreshDelay);
 
     // Start the interval to call the main function
-    setInterval(main, refreshDelay.refreshRate);
+    console.log(
+      `will refresh every ${refreshDelay.refreshRate / 60000} seconds`
+    );
+    mainLoop = setInterval(main, refreshDelay.refreshRate);
     main(); // Call the main function immediately
   } catch (err) {
     console.log("Error: " + err);
@@ -45,17 +50,42 @@ async function main() {
   lastTime = results.time;
   if (lastStatus == "partial_outage") {
     statusMessage = "ChatGPT is partially down.";
-    browser.browserAction.setIcon({ path: "icons/yellow_icon.png" });
+    browser.browserAction.setIcon({ path: "icons/128/warning.png" });
   } else if (lastStatus == "major_outage") {
     statusMessage = "ChatGPT is experiencing a major outage.";
-    browser.browserAction.setIcon({ path: "icons/red_icon.png" });
+    browser.browserAction.setIcon({ path: "icons/128/error.png" });
   } else if (lastStatus == "operational") {
     statusMessage = "ChatGPT is fully operational.";
-    browser.browserAction.setIcon({ path: "icons/green_icon.png" });
+    browser.browserAction.setIcon({ path: "icons/128/operational.png" });
   }
   console.log("Main completed. Status is " + lastStatus);
 }
 
+// stops the setInterval(), updates refresh rate, and starts it up again.
+function updateRate() {
+  console.log("updating refresh rate");
+  clearInterval(mainLoop);
+  init();
+}
+
+// if a chatGPT tab is open, switch to that. Otherwise, open a new chatGPT tab.
+function openChatGPT() {
+  browser.tabs.query({ currentWindow: true }, (tabs) => {
+    let gptOpen = false;
+    tabs.forEach((tab) => {
+      if (tab.url.includes("chat.openai.com")) {
+        browser.tabs.update(tab.id, { active: true });
+        gptOpen = true;
+      }
+    });
+
+    if (!gptOpen) {
+      browser.tabs.create({ url: "https://chat.openai.com" });
+    }
+  });
+}
+
 browser.runtime.onStartup.addListener(init);
-browser.browserAction.onClicked.addListener(init);
+browser.browserAction.onClicked.addListener(openChatGPT);
+browser.runtime.onMessage.addListener(updateRate);
 init();

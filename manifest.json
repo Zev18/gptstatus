@@ -12,11 +12,11 @@
   "description": "A browser extension that changes its icon depending on the status of ChatGPT.",
   "homepage_url": "https://github.com/Zev18/gptstatus",
   "icons": {
-    "48": "icons/green_icon.png"
+    "128": "icons/128/operational.png"
   },
 
   "browser_action": {
-    "default_icon": "icons/green_icon.png",
+    "default_icon": "icons/128/operational.png",
     "default_title": "GPTstatus"
   },
 
@@ -29,5 +29,5 @@
     "browser_style": true
   },
 
-  "permissions": ["storage"]
+  "permissions": ["storage", "tabs"]
 }

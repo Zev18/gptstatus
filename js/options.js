@@ -2,6 +2,11 @@ document.getElementById("saveButton").addEventListener("click", (e) => {
   const refreshRate = document.getElementById("refreshRate").value * 60000;
   browser.storage.sync.set({ refreshRate: refreshRate });
   console.log(refreshRate);
+  browser.runtime
+    .sendMessage({
+      update: true,
+    })
+    .then(console.log("success", (error) => console.log(`Error: ${error}`)));
   e.preventDefault();
 });
 
