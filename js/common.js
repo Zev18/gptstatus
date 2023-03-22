@@ -1,11 +1,11 @@
 // This is the main js file for the extension.
-var lastStatus;
-var lastTime;
+let lastStatus;
+let lastTime;
 
-var refreshDelay = 60000;
+let refreshDelay = 60000;
 
-var statusMessage;
-var timeMessage;
+let statusMessage;
+let timeMessage;
 
 // updates the status of chatGPT via the api
 async function updateStatus() {
