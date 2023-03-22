@@ -2,11 +2,12 @@
 var lastStatus;
 var lastTime;
 
-const refreshDelay = 60000;
+var refreshDelay = 60000;
 
 var statusMessage;
 var timeMessage;
 
+// updates the status of chatGPT via the api
 async function updateStatus() {
   try {
     const response = await fetch(
@@ -21,12 +22,27 @@ async function updateStatus() {
   }
 }
 
+// initializes stored variables and starts main function
 async function init() {
-  console.log("init started");
+  try {
+    console.log("init started");
+    refreshDelay = await browser.storage.local.get({ refreshRate: 60000 });
+    console.log(refreshDelay);
+
+    // Start the interval to call the main function
+    setInterval(main, refreshDelay.refreshRate);
+    main(); // Call the main function immediately
+  } catch (err) {
+    console.log("Error: " + err);
+    main();
+  }
+}
+
+// checks periodically for outages and changes icon accordingly
+async function main() {
   let results = await updateStatus();
   lastStatus = results.status;
   lastTime = results.time;
-  console.log(results);
   if (lastStatus == "partial_outage") {
     statusMessage = "ChatGPT is partially down.";
     browser.browserAction.setIcon({ path: "icons/yellow_icon.png" });
@@ -37,9 +53,9 @@ async function init() {
     statusMessage = "ChatGPT is fully operational.";
     browser.browserAction.setIcon({ path: "icons/green_icon.png" });
   }
-
-  setInterval(init, refreshDelay);
+  console.log("Main completed. Status is " + lastStatus);
 }
 
 browser.runtime.onStartup.addListener(init);
 browser.browserAction.onClicked.addListener(init);
+init();
