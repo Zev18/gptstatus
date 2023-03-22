@@ -17,7 +17,8 @@
 
   "browser_action": {
     "default_icon": "icons/128/operational.png",
-    "default_title": "GPTstatus"
+    "default_title": "GPTstatus",
+    "default_popup": "html/popup.html"
   },
 
   "background": {

@@ -63,7 +63,6 @@ async function main() {
 
 // stops the setInterval(), updates refresh rate, and starts it up again.
 function updateRate() {
-  console.log("updating refresh rate");
   clearInterval(mainLoop);
   init();
 }
@@ -85,7 +84,44 @@ function openChatGPT() {
   });
 }
 
+// gets tabs of current window
+function getCurrentWindowTabs() {
+  return browser.tabs.query({ currentWindow: true });
+}
+
+// checks if chatGPT is the active tab.
+// If true: returns true, sets popup to popup.html.
+// If false: returns false, sets popup to null.
+function isChatGptOpen() {
+  console.log("checking if gpt is open");
+
+  getCurrentWindowTabs().then((tabs) => {
+    tabs.forEach((tab) => {
+      if (tab.active && tab.url.includes("chat.openai.com")) {
+        browser.browserAction.setPopup({ popup: "../html/popup.html" });
+        return true;
+      } else if (tab.active) {
+        browser.browserAction.setPopup({ popup: "" });
+        return false;
+      }
+    });
+  });
+}
+
+// decides what to do when the toolbar button is pressed
+// depending on if the active tab is chatGPT or not.
+function buttonAction() {
+  console.log("running button action");
+  if (isChatGptOpen()) {
+    browser.browserAction.openPopup();
+  } else {
+    openChatGPT();
+  }
+}
+
+browser.browserAction.setPopup({ popup: "" });
 browser.runtime.onStartup.addListener(init);
-browser.browserAction.onClicked.addListener(openChatGPT);
+browser.browserAction.onClicked.addListener(buttonAction);
+browser.tabs.onActivated.addListener(isChatGptOpen);
 browser.runtime.onMessage.addListener(updateRate);
 init();
