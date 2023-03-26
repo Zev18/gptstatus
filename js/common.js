@@ -11,12 +11,25 @@ let mainLoop;
 
 // updates the status of chatGPT via the api
 async function updateStatus() {
+  console.log("updating status");
   try {
     const response = await fetch(
       "https://status.openai.com/api/v2/summary.json"
     );
+    let othersDown = false;
     const data = await response.json();
+    data.components.forEach((e, index) => {
+      if (e.status != "operational" && index != 1) {
+        othersDown = true;
+      }
+    });
     const { status, updated_at: time } = data.components[1];
+    browser.storage.sync.set({
+      last_update: formatDate(time),
+      status,
+      othersDown,
+    });
+
     return { status, time };
   } catch (err) {
     console.log("Error: " + err);
@@ -33,7 +46,7 @@ async function init() {
 
     // Start the interval to call the main function
     console.log(
-      `will refresh every ${refreshDelay.refreshRate / 60000} seconds`
+      `will refresh every ${refreshDelay.refreshRate / 60000} minutes`
     );
     mainLoop = setInterval(main, refreshDelay.refreshRate);
     main(); // Call the main function immediately
@@ -49,13 +62,10 @@ async function main() {
   lastStatus = results.status;
   lastTime = results.time;
   if (lastStatus == "partial_outage") {
-    statusMessage = "ChatGPT is partially down.";
     browser.browserAction.setIcon({ path: "icons/128/warning.png" });
   } else if (lastStatus == "major_outage") {
-    statusMessage = "ChatGPT is experiencing a major outage.";
     browser.browserAction.setIcon({ path: "icons/128/error.png" });
   } else if (lastStatus == "operational") {
-    statusMessage = "ChatGPT is fully operational.";
     browser.browserAction.setIcon({ path: "icons/128/operational.png" });
   }
   console.log("Main completed. Status is " + lastStatus);
@@ -111,6 +121,7 @@ function isChatGptOpen() {
 // decides what to do when the toolbar button is pressed
 // depending on if the active tab is chatGPT or not.
 function buttonAction() {
+  updateStatus();
   console.log("running button action");
   if (isChatGptOpen()) {
     browser.browserAction.openPopup();
@@ -119,9 +130,56 @@ function buttonAction() {
   }
 }
 
+// converts date from ISO 8601 to a readable format
+function formatDate(dateString) {
+  const date = new Date(dateString);
+
+  let today = new Date();
+  let dayString;
+  let timeString;
+
+  console.log(dateString);
+  console.log(date);
+
+  if (
+    date.getFullYear() === today.getFullYear() &&
+    date.getMonth() === today.getMonth() &&
+    date.getDate() === today.getDate()
+  ) {
+    dayString = "Today";
+  } else {
+    today.setDate(today.getDate() - 1);
+    if (
+      date.getFullYear() === today.getFullYear() &&
+      date.getMonth() === today.getMonth() &&
+      date.getDate() === today.getDate()
+    ) {
+      dayString = "Yesterday";
+    } else {
+      dayString = date.toLocaleDateString(undefined);
+    }
+  }
+
+  timeString = date.toLocaleTimeString(undefined, {
+    hour: "numeric",
+    minute: "numeric",
+  });
+
+  return `${dayString} at ${timeString}`;
+}
+
+// processes received message
+function processMessage(request, sender) {
+  if (request.refresh) {
+    updateStatus();
+  } else {
+    updateRate();
+  }
+}
+
 browser.browserAction.setPopup({ popup: "" });
 browser.runtime.onStartup.addListener(init);
 browser.browserAction.onClicked.addListener(buttonAction);
 browser.tabs.onActivated.addListener(isChatGptOpen);
-browser.runtime.onMessage.addListener(updateRate);
+browser.runtime.onMessage.addListener(processMessage);
 init();

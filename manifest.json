@@ -1,5 +1,5 @@
 {
-  "manifest_version": 2,
+  "manifest_version": 3,
   "name": "GPTstatus",
   "version": "1.0",
 
@@ -15,14 +15,14 @@
     "128": "icons/128/operational.png"
   },
 
-  "browser_action": {
+  "action": {
     "default_icon": "icons/128/operational.png",
     "default_title": "GPTstatus",
     "default_popup": "html/popup.html"
   },
 
   "background": {
-    "scripts": ["js/common.js"]
+    "service_worker": "js/common.js"
   },
 
   "options_ui": {
