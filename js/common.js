@@ -62,11 +62,11 @@ async function main() {
   lastStatus = results.status;
   lastTime = results.time;
   if (lastStatus == "partial_outage") {
-    browser.browserAction.setIcon({ path: "icons/128/warning.png" });
+    browser.action.setIcon({ path: "icons/128/warning.png" });
   } else if (lastStatus == "major_outage") {
-    browser.browserAction.setIcon({ path: "icons/128/error.png" });
+    browser.action.setIcon({ path: "icons/128/error.png" });
   } else if (lastStatus == "operational") {
-    browser.browserAction.setIcon({ path: "icons/128/operational.png" });
+    browser.action.setIcon({ path: "icons/128/operational.png" });
   }
   console.log("Main completed. Status is " + lastStatus);
 }
@@ -108,10 +108,10 @@ function isChatGptOpen() {
   getCurrentWindowTabs().then((tabs) => {
     tabs.forEach((tab) => {
       if (tab.active && tab.url.includes("chat.openai.com")) {
-        browser.browserAction.setPopup({ popup: "../html/popup.html" });
+        browser.action.setPopup({ popup: "../html/popup.html" });
         return true;
       } else if (tab.active) {
-        browser.browserAction.setPopup({ popup: "" });
+        browser.action.setPopup({ popup: "" });
         return false;
       }
     });
@@ -124,7 +124,7 @@ function buttonAction() {
   updateStatus();
   console.log("running button action");
   if (isChatGptOpen()) {
-    browser.browserAction.openPopup();
+    browser.action.openPopup();
   } else {
     openChatGPT();
   }
@@ -177,9 +177,9 @@ function processMessage(request, sender) {
   }
 }
 
-browser.browserAction.setPopup({ popup: "" });
+browser.action.setPopup({ popup: "" });
 browser.runtime.onStartup.addListener(init);
-browser.browserAction.onClicked.addListener(buttonAction);
+browser.action.onClicked.addListener(buttonAction);
 browser.tabs.onActivated.addListener(isChatGptOpen);
 browser.runtime.onMessage.addListener(processMessage);
 init();

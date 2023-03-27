@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "GPTstatus",
-  "version": "1.0",
+  "version": "1.1",
 
   "browser_specific_settings": {
     "gecko": {
@@ -22,7 +22,7 @@
   },
 
   "background": {
-    "service_worker": "js/common.js"
+    "scripts": ["js/common.js"]
   },
 
   "options_ui": {
